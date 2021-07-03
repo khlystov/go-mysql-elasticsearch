@@ -1,14 +1,19 @@
-FROM golang:alpine
+FROM golang:1.12-alpine AS builder
 
-MAINTAINER siddontang
+RUN apk update && apk add alpine-sdk git && rm -rf /var/cache/apk/*
 
-RUN apk add --no-cache tini mariadb-client
 
-ADD . /go/src/github.com/siddontang/go-mysql-elasticsearch
+WORKDIR /app
 
-RUN apk add --no-cache mariadb-client
-RUN cd /go/src/github.com/siddontang/go-mysql-elasticsearch/ && \
-    go build -o bin/go-mysql-elasticsearch ./cmd/go-mysql-elasticsearch && \
-    cp -f ./bin/go-mysql-elasticsearch /go/bin/go-mysql-elasticsearch
+ENV GIT_TERMINAL_PROMPT 1
 
-ENTRYPOINT ["/sbin/tini","--","go-mysql-elasticsearch"]
+COPY . .
+RUN go build -o go-mysql-elasticsearch cmd/go-mysql-elasticsearch/main.go
+
+
+FROM alpine:latest
+
+WORKDIR /app
+COPY --from=builder /app .
+
+ENTRYPOINT ["./go-mysql-elasticsearch"]
