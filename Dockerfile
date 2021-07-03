@@ -11,7 +11,10 @@ COPY . .
 RUN go build -o go-mysql-elasticsearch cmd/go-mysql-elasticsearch/main.go
 
 
-FROM alpine:latest
+FROM ubuntu:18.04
+
+RUN apt -y update
+RUN apt -y install mysql-clien
 
 WORKDIR /app
 COPY --from=builder /app .
